@@ -1,0 +1,190 @@
+C51 COMPILER V9.60.0.0   BSP_DHT11                                                         02/12/2021 02:25:39 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE BSP_DHT11
+OBJECT MODULE PLACED IN .\Objects\bsp_dht11.obj
+COMPILER INVOKED BY: E:\Keil_v5\C51\BIN\C51.EXE ..\User\dht11\bsp_dht11.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(..\User;
+                    -..\mcu_sdk) DEBUG OBJECTEXTEND PRINT(.\Listings\bsp_dht11.lst) TABS(2) OBJECT(.\Objects\bsp_dht11.obj)
+
+line level    source
+
+   1          #include "./dht11/bsp_dht11.h"
+   2          
+   3          
+   4          
+   5          static void                           DHT11_GPIO_Config                       ( void );
+   6          static void                           DHT11_Mode_IPU                          ( void );
+   7          static void                           DHT11_Mode_Out_PP                       ( void );
+   8          static uint8_t                        DHT11_ReadByte                          ( void );
+   9          
+  10          
+  11          
+  12           /**
+  13            * @brief  DHT11 初始化函数
+  14            * @param  无
+  15            * @retval 无
+  16            */
+  17          void DHT11_Init ( void )
+  18          {
+  19   1        P1M1=(P1M1&0x7F)|0x00;  //设置IO口模式
+  20   1        P1M0=(P1M0&0x7F)|0x80;  //设置IO口模式
+  21   1        /*
+  22   1        P1.7推挽
+  23   1        */
+  24   1        macDHT11_Dout_1;
+  25   1      }
+  26          
+  27          
+  28          /*
+  29           * 函数名：DHT11_Mode_IPU
+  30           * 描述  ：使DHT11-DATA引脚变为上拉输入模式
+  31           * 输入  ：无
+  32           * 输出  ：无
+  33           */
+  34          static void DHT11_Mode_IPU(void)
+  35          {
+  36   1        P1M1=(P1M1&0x7F)|0x80;  //设置IO口模式
+  37   1        P1M0=(P1M0&0x7F)|0x80;  //设置IO口模式
+  38   1        /*
+  39   1        P1.0维持不变
+  40   1        P1.1维持不变
+  41   1        P1.2维持不变
+  42   1        P1.3维持不变
+  43   1        P1.4维持不变
+  44   1        P1.5维持不变
+  45   1        P1.6维持不变
+  46   1        P1.7开漏
+  47   1        */
+  48   1      }
+  49          
+  50          
+  51          /*
+  52           * 函数名：DHT11_Mode_Out_PP
+  53           * 描述  ：使DHT11-DATA引脚变为推挽输出模式
+  54           * 输入  ：无
+C51 COMPILER V9.60.0.0   BSP_DHT11                                                         02/12/2021 02:25:39 PAGE 2   
+
+  55           * 输出  ：无
+  56           */
+  57          static void DHT11_Mode_Out_PP(void)
+  58          {
+  59   1        P1M1=(P1M1&0x7F)|0x00;  //设置IO口模式
+  60   1        P1M0=(P1M0&0x7F)|0x80;  //设置IO口模式
+  61   1        /*
+  62   1        P1.7推挽
+  63   1        */
+  64   1      }
+  65          
+  66          
+  67          /* 
+  68           * 从DHT11读取一个字节，MSB先行
+  69           */
+  70          static uint8_t DHT11_ReadByte ( void )
+  71          {
+  72   1        uint8_t i, temp=0;
+  73   1        
+  74   1      
+  75   1        for(i=0;i<8;i++)    
+  76   1        {  
+  77   2          /*每bit以50us低电平标置开始，轮询直到从机发出 的50us 低电平 结束*/  
+  78   2          while(macDHT11_Data==Bit_RESET);
+  79   2      
+  80   2          /*DHT11 以26~28us的高电平表示“0”，以70us高电平表示“1”，
+  81   2           *通过检测 x us后的电平即可区别这两个状 ，x 即下面的延时 
+  82   2           */
+  83   2          Delay_us(40); //延时x us 这个延时需要大于数据0持续的时间即可        
+  84   2      
+  85   2          if(macDHT11_Data==Bit_SET)/* x us后仍为高电平表示数据“1” */
+  86   2          {
+  87   3            /* 等待数据1的高电平结束 */
+  88   3            while(macDHT11_Data==Bit_SET);
+  89   3      
+  90   3            temp|=(uint8_t)(0x01<<(7-i));  //把第7-i位置1，MSB先行 
+  91   3          }
+  92   2          else   // x us后为低电平表示数据“0”
+  93   2          {        
+  94   3            temp&=(uint8_t)~(0x01<<(7-i)); //把第7-i位置0，MSB先行
+  95   3          }
+  96   2        }
+  97   1        
+  98   1        return temp;
+  99   1        
+ 100   1      }
+ 101          
+ 102          
+ 103          /*
+ 104           * 一次完整的数据传输为40bit，高位先出
+ 105           * 8bit 湿度整数 + 8bit 湿度小数 + 8bit 温度整数 + 8bit 温度小数 + 8bit 校验和 
+ 106           */
+ 107          uint8_t DHT11_Read_TempAndHumidity(DHT11_Data_TypeDef *DHT11_Data)
+ 108          {  
+ 109   1        /*输出模式*/
+ 110   1        DHT11_Mode_Out_PP();
+ 111   1        /*主机拉低*/
+ 112   1        macDHT11_Dout_0;
+ 113   1        /*延时18ms*/
+ 114   1        Delay_ms(18);
+ 115   1      
+ 116   1        /*总线拉高 主机延时30us*/
+C51 COMPILER V9.60.0.0   BSP_DHT11                                                         02/12/2021 02:25:39 PAGE 3   
+
+ 117   1        macDHT11_Dout_1; 
+ 118   1      
+ 119   1        Delay_us(30);   //延时30us
+ 120   1      
+ 121   1        /*主机设为输入 判断从机响应信号*/ 
+ 122   1        DHT11_Mode_IPU();
+ 123   1      
+ 124   1        /*判断从机是否有低电平响应信号 如不响应则跳出，响应则向下运行*/   
+ 125   1        if(macDHT11_Data==Bit_RESET)     
+ 126   1        {
+ 127   2          /*轮询直到从机发出 的80us 低电平 响应信号结束*/  
+ 128   2          while(macDHT11_Data==Bit_RESET);
+ 129   2      
+ 130   2          /*轮询直到从机发出的 80us 高电平 标置信号结束*/
+ 131   2          while(macDHT11_Data==Bit_SET);
+ 132   2      
+ 133   2          /*开始接收数据*/   
+ 134   2          DHT11_Data->humi_int= DHT11_ReadByte();
+ 135   2      
+ 136   2          DHT11_Data->humi_deci= DHT11_ReadByte();
+ 137   2      
+ 138   2          DHT11_Data->temp_int= DHT11_ReadByte();
+ 139   2      
+ 140   2          DHT11_Data->temp_deci= DHT11_ReadByte();
+ 141   2      
+ 142   2          DHT11_Data->check_sum= DHT11_ReadByte();
+ 143   2      
+ 144   2      
+ 145   2          /*读取结束，引脚改为输出模式*/
+ 146   2          DHT11_Mode_Out_PP();
+ 147   2          /*主机拉高*/
+ 148   2          macDHT11_Dout_1;
+ 149   2      
+ 150   2          /*检查读取的数据是否正确*/
+ 151   2          if(DHT11_Data->check_sum == DHT11_Data->humi_int + DHT11_Data->humi_deci + DHT11_Data->temp_int+ DHT11_D
+             -ata->temp_deci)
+ 152   2            return SUCCESS;
+ 153   2          else 
+ 154   2            return ERROR;
+ 155   2        }
+ 156   1        
+ 157   1        else
+ 158   1          return ERROR;
+ 159   1        
+ 160   1      }
+ 161          /*************************************END OF FILE******************************/
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    371    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----       5
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

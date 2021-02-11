@@ -702,7 +702,7 @@ I (..\..\Libraries\FWlib\inc\stm32f10x_spi.h)(0x5D400958)
 I (..\..\Libraries\FWlib\inc\stm32f10x_tim.h)(0x5D400958)
 I (..\..\Libraries\FWlib\inc\stm32f10x_usart.h)(0x5D400958)
 I (..\..\Libraries\FWlib\inc\misc.h)(0x5D400958)
-F (..\..\User\main.c)(0x602169AE)(-c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork -I ..\..\Libraries\CMSIS -I ..\..\User -I ..\..\Libraries\FWlib\inc -I ..\..\mcu_sdk-I.\RTE\_____EDA_________-IE:\Arm\Packs\Keil\STM32F1xx_DFP\2.3.0\Device\Include-IE:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="530" -DSTM32F10X_MD -D_RTE_ -DSTM32F10X_MD -DUSE_STDPERIPH_DRIVER -DUSE_OLED_DISPLAY-o ..\..\output\main.o --omf_browse ..\..\output\main.crf --depend ..\..\output\main.d)
+F (..\..\User\main.c)(0x60257B1D)(-c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork -I ..\..\Libraries\CMSIS -I ..\..\User -I ..\..\Libraries\FWlib\inc -I ..\..\mcu_sdk-I.\RTE\_____EDA_________-IE:\Arm\Packs\Keil\STM32F1xx_DFP\2.3.0\Device\Include-IE:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="530" -DSTM32F10X_MD -D_RTE_ -DSTM32F10X_MD -DUSE_STDPERIPH_DRIVER -DUSE_OLED_DISPLAY-o ..\..\output\main.o --omf_browse ..\..\output\main.crf --depend ..\..\output\main.d)
 I (..\..\User\include.h)(0x602123EC)
 I (..\..\Libraries\CMSIS\stm32f10x.h)(0x5D400958)
 I (..\..\Libraries\CMSIS\core_cm3.h)(0x5D400958)

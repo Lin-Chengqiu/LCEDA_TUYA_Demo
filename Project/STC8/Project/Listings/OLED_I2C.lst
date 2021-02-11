@@ -1,0 +1,370 @@
+C51 COMPILER V9.60.0.0   OLED_I2C                                                          02/12/2021 02:25:38 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE OLED_I2C
+OBJECT MODULE PLACED IN .\Objects\OLED_I2C.obj
+COMPILER INVOKED BY: E:\Keil_v5\C51\BIN\C51.EXE ..\User\OLED\OLED_I2C.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(..\User;..
+                    -\mcu_sdk) DEBUG OBJECTEXTEND PRINT(.\Listings\OLED_I2C.lst) TABS(2) OBJECT(.\Objects\OLED_I2C.obj)
+
+line level    source
+
+   1          #include "./OLED/OLED_I2C.h"
+   2          #include "./OLED/codetab.h"
+   3          
+   4          bit busy_iic;
+   5          
+   6          void I2C_Isr() interrupt 24
+   7          {
+   8   1          char store;
+   9   1          
+  10   1          store = P_SW2;
+  11   1          P_SW2 |= 0x80;
+  12   1          if (I2CMSST & 0x40)
+  13   1          {
+  14   2              I2CMSST &= ~0x40;                       //清中断标志
+  15   2              busy_iic = 0;
+  16   2          }
+  17   1          P_SW2 = store;
+  18   1      }
+  19          
+  20          void Start()
+  21          {
+  22   1          busy_iic = 1;
+  23   1          I2CMSCR = 0x81;                             //发送START命令
+  24   1          while (busy_iic);
+  25   1      }
+  26          
+  27          void SendData(char dat)
+  28          {
+  29   1          I2CTXD = dat;                               //写数据到数据缓冲区
+  30   1          busy_iic = 1;
+  31   1          I2CMSCR = 0x82;                             //发送SEND命令
+  32   1          while (busy_iic);
+  33   1      }
+  34          
+  35          void RecvACK()
+  36          {
+  37   1          busy_iic = 1;
+  38   1          I2CMSCR = 0x83;                             //发送读ACK命令
+  39   1          while (busy_iic);
+  40   1      }
+  41          
+  42          char RecvData()
+  43          {
+  44   1          busy_iic = 1;
+  45   1          I2CMSCR = 0x84;                             //发送RECV命令
+  46   1          while (busy_iic);
+  47   1          return I2CRXD;
+  48   1      }
+  49          
+  50          void SendACK()
+  51          {
+  52   1          I2CMSST = 0x00;                             //设置ACK信号
+  53   1          busy_iic = 1;
+  54   1          I2CMSCR = 0x85;                             //发送ACK命令
+C51 COMPILER V9.60.0.0   OLED_I2C                                                          02/12/2021 02:25:38 PAGE 2   
+
+  55   1          while (busy_iic);
+  56   1      }
+  57          
+  58          void SendNAK()
+  59          {
+  60   1          I2CMSST = 0x01;                             //设置NAK信号
+  61   1          busy_iic = 1;
+  62   1          I2CMSCR = 0x85;                             //发送ACK命令
+  63   1          while (busy_iic);
+  64   1      }
+  65          
+  66          void Stop()
+  67          {
+  68   1          busy_iic = 1;
+  69   1          I2CMSCR = 0x86;                             //发送STOP命令
+  70   1          while (busy_iic);
+  71   1      }
+  72          
+  73          
+  74          
+  75          void I2C_Configuration(void)
+  76          {           
+  77   1        P_SW2 = 0x80;
+  78   1        I2CCFG = 0xe0;                              //使能I2C主机模式
+  79   1        I2CMSST = 0x00;
+  80   1      }
+  81          
+  82          
+  83           /**
+  84            * @brief  I2C_WriteByte，向OLED寄存器地址写一个byte的数据
+  85            * @param  addr：寄存器地址
+  86            *         data：要写入的数据
+  87            * @retval 无
+  88            */
+  89          void I2C_WriteByte(uint8_t addr,uint8_t dat)
+  90          {
+  91   1        Start();
+  92   1        SendData(0x78);//器件地址
+  93   1        SendACK();
+  94   1        SendData(addr);//寄存器地址
+  95   1        SendACK();
+  96   1        SendData(dat);
+  97   1        SendACK();
+  98   1        Stop();                               //发送停止命令
+  99   1      }
+ 100          
+ 101          
+ 102           /**
+ 103            * @brief  WriteCmd，向OLED写入命令
+ 104            * @param  I2C_Command：命令代码
+ 105            * @retval 无
+ 106            */
+ 107          void WriteCmd(unsigned char I2C_Command)//写命令
+ 108          {
+ 109   1        I2C_WriteByte(0x00, I2C_Command);
+ 110   1      }
+ 111          
+ 112          
+ 113           /**
+ 114            * @brief  WriteDat，向OLED写入数据
+ 115            * @param  I2C_Data：数据
+ 116            * @retval 无
+C51 COMPILER V9.60.0.0   OLED_I2C                                                          02/12/2021 02:25:38 PAGE 3   
+
+ 117            */
+ 118          void WriteDat(unsigned char I2C_Data)//写数据
+ 119          {
+ 120   1        I2C_WriteByte(0x40, I2C_Data);
+ 121   1      }
+ 122          
+ 123          
+ 124           /**
+ 125            * @brief  OLED_Init，初始化OLED
+ 126            * @param  无
+ 127            * @retval 无
+ 128            */
+ 129          void OLED_Init(void)
+ 130          {
+ 131   1        I2C_Configuration();
+ 132   1        WriteCmd(0xAE); //display off
+ 133   1        WriteCmd(0x20); //Set Memory Addressing Mode  
+ 134   1        WriteCmd(0x10); //00,Horizontal Addressing Mode;01,Vertical Addressing Mode;10,Page Addressing Mode (RESE
+             -T);11,Invalid
+ 135   1        WriteCmd(0xb0); //Set Page Start Address for Page Addressing Mode,0-7
+ 136   1        WriteCmd(0xc8); //Set COM Output Scan Direction
+ 137   1        WriteCmd(0x00); //---set low column address
+ 138   1        WriteCmd(0x10); //---set high column address
+ 139   1        WriteCmd(0x40); //--set start line address
+ 140   1        WriteCmd(0x81); //--set contrast control register
+ 141   1        WriteCmd(0x0f); //亮度调节 0x00~0xff
+ 142   1        WriteCmd(0xa1); //--set segment re-map 0 to 127
+ 143   1        WriteCmd(0xa6); //--set normal display
+ 144   1        WriteCmd(0xa8); //--set multiplex ratio(1 to 64)
+ 145   1        WriteCmd(0x3F); //
+ 146   1        WriteCmd(0xa4); //0xa4,Output follows RAM content;0xa5,Output ignores RAM content
+ 147   1        WriteCmd(0xd3); //-set display offset
+ 148   1        WriteCmd(0x00); //-not offset
+ 149   1        WriteCmd(0xd5); //--set display clock divide ratio/oscillator frequency
+ 150   1        WriteCmd(0xf0); //--set divide ratio
+ 151   1        WriteCmd(0xd9); //--set pre-charge period
+ 152   1        WriteCmd(0x22); //
+ 153   1        WriteCmd(0xda); //--set com pins hardware configuration
+ 154   1        WriteCmd(0x12);
+ 155   1        WriteCmd(0xdb); //--set vcomh
+ 156   1        WriteCmd(0x20); //0x20,0.77xVcc
+ 157   1        WriteCmd(0x8d); //--set DC-DC enable
+ 158   1        WriteCmd(0x14); //
+ 159   1        WriteCmd(0xaf); //--turn on oled panel
+ 160   1        OLED_CLS();
+ 161   1      }
+ 162          
+ 163          
+ 164           /**
+ 165            * @brief  OLED_SetPos，设置光标
+ 166            * @param  x,光标x位置
+ 167            *         y，光标y位置
+ 168            * @retval 无
+ 169            */
+ 170          void OLED_SetPos(unsigned char x, unsigned char y) //设置起始点坐标
+ 171          { 
+ 172   1        WriteCmd(0xb0+y);
+ 173   1        WriteCmd(((x&0xf0)>>4)|0x10);
+ 174   1        WriteCmd((x&0x0f)|0x01);
+ 175   1      }
+ 176          
+ 177           /**
+C51 COMPILER V9.60.0.0   OLED_I2C                                                          02/12/2021 02:25:38 PAGE 4   
+
+ 178            * @brief  OLED_Fill，填充整个屏幕
+ 179            * @param  fill_Data:要填充的数据
+ 180            * @retval 无
+ 181            */
+ 182          void OLED_Fill(unsigned char fill_Data)//全屏填充
+ 183          {
+ 184   1        unsigned char m,n;
+ 185   1        for(m=0;m<8;m++)
+ 186   1        {
+ 187   2          WriteCmd(0xb0+m);   //page0-page1
+ 188   2          WriteCmd(0x00);   //low column start address
+ 189   2          WriteCmd(0x10);   //high column start address
+ 190   2          for(n=0;n<128;n++)
+ 191   2            {
+ 192   3              WriteDat(fill_Data);
+ 193   3            }
+ 194   2        }
+ 195   1      }
+ 196          
+ 197           /**
+ 198            * @brief  OLED_CLS，清屏
+ 199            * @param  无
+ 200            * @retval 无
+ 201            */
+ 202          void OLED_CLS(void)//清屏
+ 203          {
+ 204   1        OLED_Fill(0x00);
+ 205   1      }
+ 206          
+ 207          
+ 208           /**
+ 209            * @brief  OLED_ON，将OLED从休眠中唤醒
+ 210            * @param  无
+ 211            * @retval 无
+ 212            */
+ 213          void OLED_ON(void)
+ 214          {
+ 215   1        WriteCmd(0X8D);  //设置电荷泵
+ 216   1        WriteCmd(0X14);  //开启电荷泵
+ 217   1        WriteCmd(0XAF);  //OLED唤醒
+ 218   1      }
+ 219          
+ 220          
+ 221           /**
+ 222            * @brief  OLED_OFF，让OLED休眠 -- 休眠模式下,OLED功耗不到10uA
+ 223            * @param  无
+ 224            * @retval 无
+ 225            */
+ 226          void OLED_OFF(void)
+ 227          {
+ 228   1        WriteCmd(0X8D);  //设置电荷泵
+ 229   1        WriteCmd(0X10);  //关闭电荷泵
+ 230   1        WriteCmd(0XAE);  //OLED休眠
+ 231   1      }
+ 232          
+ 233          
+ 234           /**
+ 235            * @brief  OLED_ShowStr，显示codetab.h中的ASCII字符,有6*8和8*16可选择
+ 236            * @param  x,y : 起始点坐标(x:0~127, y:0~7);
+ 237            *         ch[] :- 要显示的字符串; 
+ 238            *         TextSize : 字符大小(1:6*8 ; 2:8*16)
+ 239            * @retval 无
+C51 COMPILER V9.60.0.0   OLED_I2C                                                          02/12/2021 02:25:38 PAGE 5   
+
+ 240            */
+ 241          void OLED_ShowStr(unsigned char x, unsigned char y, unsigned char ch[], unsigned char TextSize)
+ 242          {
+ 243   1        unsigned char c = 0,i = 0,j = 0;
+ 244   1        switch(TextSize)
+ 245   1        {
+ 246   2          case 1:
+ 247   2          {
+ 248   3            while(ch[j] != '\0')
+ 249   3            {
+ 250   4              c = ch[j] - 32;
+ 251   4              if(x > 126)
+ 252   4              {
+ 253   5                x = 0;
+ 254   5                y++;
+ 255   5              }
+ 256   4              OLED_SetPos(x,y);
+ 257   4              for(i=0;i<6;i++)
+ 258   4                WriteDat(F6x8[c][i]);
+ 259   4              x += 6;
+ 260   4              j++;
+ 261   4            }
+ 262   3          }break;
+ 263   2          case 2:
+ 264   2          {
+ 265   3            while(ch[j] != '\0')
+ 266   3            {
+ 267   4              c = ch[j] - 32;
+ 268   4              if(x > 120)
+ 269   4              {
+ 270   5                x = 0;
+ 271   5                y++;
+ 272   5              }
+ 273   4              OLED_SetPos(x,y);
+ 274   4              for(i=0;i<8;i++)
+ 275   4                WriteDat(F8X16[c*16+i]);
+ 276   4              OLED_SetPos(x,y+1);
+ 277   4              for(i=0;i<8;i++)
+ 278   4                WriteDat(F8X16[c*16+i+8]);
+ 279   4              x += 8;
+ 280   4              j++;
+ 281   4            }
+ 282   3          }break;
+ 283   2        }
+ 284   1      }
+ 285          
+ 286           /**
+ 287            * @brief  OLED_ShowCN，显示codetab.h中的汉字,16*16点阵
+ 288            * @param  x,y: 起始点坐标(x:0~127, y:0~7); 
+ 289            *         N:汉字在codetab.h中的索引
+ 290            * @retval 无
+ 291            */
+ 292          void OLED_ShowCN(unsigned char x, unsigned char y, unsigned char N)
+ 293          {
+ 294   1        unsigned char wm=0;
+ 295   1        unsigned int  adder=32*N;
+ 296   1        OLED_SetPos(x , y);
+ 297   1        for(wm = 0;wm < 16;wm++)
+ 298   1        {
+ 299   2          WriteDat(F16x16[adder]);
+ 300   2          adder += 1;
+ 301   2        }
+C51 COMPILER V9.60.0.0   OLED_I2C                                                          02/12/2021 02:25:38 PAGE 6   
+
+ 302   1        OLED_SetPos(x,y + 1);
+ 303   1        for(wm = 0;wm < 16;wm++)
+ 304   1        {
+ 305   2          WriteDat(F16x16[adder]);
+ 306   2          adder += 1;
+ 307   2        }
+ 308   1      }
+ 309          
+ 310          
+ 311          
+ 312           /**
+ 313            * @brief  OLED_DrawBMP，显示BMP位图
+ 314            * @param  x0,y0 :起始点坐标(x0:0~127, y0:0~7);
+ 315            *         x1,y1 : 起点对角线(结束点)的坐标(x1:1~128,y1:1~8)
+ 316            * @retval 无
+ 317            */
+ 318          void OLED_DrawBMP(unsigned char x0,unsigned char y0,unsigned char x1,unsigned char y1,unsigned char BMP[])
+ 319          {
+ 320   1        unsigned int j=0;
+ 321   1        unsigned char x,y;
+ 322   1      
+ 323   1        if(y1%8==0)
+ 324   1          y = y1/8;
+ 325   1        else
+ 326   1          y = y1/8 + 1;
+ 327   1        for(y=y0;y<y1;y++)
+ 328   1        {
+ 329   2          OLED_SetPos(x0,y);
+ 330   2          for(x=x0;x<x1;x++)
+ 331   2          {
+ 332   3            WriteDat(BMP[j++]);
+ 333   3          }
+ 334   2        }
+ 335   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1013    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   3512      19
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      1    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

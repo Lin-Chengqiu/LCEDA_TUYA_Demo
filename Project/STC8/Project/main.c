@@ -1,18 +1,12 @@
 #include "include.h"
 
-uint8_t screenMode = 1;
 uint8_t i;
-char dispBuff[100];
+uint8_t dispBuff[100];
 DHT11_Data_TypeDef DHT11_Data;
 uint8_t tempState;
-uint32_t *p;
-uint8_t HUM_ALARM = 90;
-uint8_t TEMP_ALARM = 30;
-
+uint8_t a = 20;
 void All_init();
-void screen0();
-void screen1();
-void alarmBeep();
+void screen();
 void getValue_and_update();
 
 int main()
@@ -21,43 +15,22 @@ int main()
 	while (1)
 	{
 		wifi_uart_service();
-		alarmBeep();
 		getValue_and_update();
-		KeyFunction();
-		switch(screenMode)
-		{
-			case 0:screen0();break;
-			case 1:screen1();break;
-			default:break;
-		}
+		KeyScan();
+		screen();
 	}
 }
 
 void All_init()
 {
-	HUM_ALARM = *(uint32_t *)(0x08000000+2*1024*20);
-	TEMP_ALARM = *(uint32_t *)(0x08000000+2*1024*20+10);
-	USART_Config();
+	LED_init();
+	Key_init();
+	Timer4Init();	
+	UartDebugInit();
+	Uart3Init();
 	wifi_protocol_init();
-	Key_GPIO_Config();
-	BASIC_TIM_Init();
-	LED_GPIO_Config();
-	BEEP_Init();
-	SysTick_Init();
-	OLED_Init();		 //åˆå§‹åŒ–OLED
-	DHT11_Init();
-}
-
-void alarmBeep()
-{
-	if (DHT11_Data.humi_int >= HUM_ALARM||DHT11_Data.temp_int>=TEMP_ALARM)
-	{
-		BEEP_ON;
-	}
-	else
-	{
-		BEEP_OFF;
-	}
+	OLED_Init();
+	DHT11_Init();	
 }
 
 void getValue_and_update()
@@ -69,19 +42,7 @@ void getValue_and_update()
 	}
 }
 
-void screen0()
-{
-	for (i = 0; i < 7; i++)	OLED_ShowCN(i * 16, 0, i);
-	p = (uint32_t *)(0x08000000+2*1024*20);			
-	sprintf(dispBuff, "HUM_ALARM:%d", *p);
-	OLED_ShowStr(0, 3, (uint8_t *)dispBuff, 2);
-
-	p = (uint32_t *)(0x08000000+2*1024*20+10);
-	sprintf(dispBuff, "TEMP_ALARM:%d", *p);
-	OLED_ShowStr(0, 5, (uint8_t *)dispBuff, 2);
-}
-
-void screen1()
+void screen()
 {
 	for (i = 0; i < 7; i++)	OLED_ShowCN(i * 16, 0, i);
 	if(mcu_get_wifi_work_state()!=tempState) OLED_CLS();
@@ -91,7 +52,7 @@ void screen1()
 		case AP_STATE:					sprintf(dispBuff,"%s","AP_STATE");					break;
 		case WIFI_NOT_CONNECTED:sprintf(dispBuff,"%s","WIFI_NOT_CONNECTED");break;
 		case WIFI_CONNECTED:		sprintf(dispBuff,"%s","WIFI_CONNECTED");		break;
-		case WIFI_CONN_CLOUD:		sprintf(dispBuff,"%s","WIFI_CONN_CLOUD");LED1_OFF;LED2_OFF;break;
+		case WIFI_CONN_CLOUD:		sprintf(dispBuff,"%s","WIFI_CONN_CLOUD");		break;
 		case WIFI_LOW_POWER:		sprintf(dispBuff,"%s","WIFI_LOW_POWER");		break;
 		case SMART_AND_AP_STATE:sprintf(dispBuff,"%s","SMART_AND_AP_STATE");break;
 		case WIFI_SATE_UNKNOW:	sprintf(dispBuff,"%s","WIFI_SATE_UNKNOW");	break;
@@ -100,13 +61,12 @@ void screen1()
 	tempState = mcu_get_wifi_work_state();
 	OLED_ShowStr(16, 2, (uint8_t *)dispBuff, 1);
 
-	/* æ˜¾ç¤ºæ¸©åº¦ */
+	/* ÏÔÊ¾ÎÂ¶È */
 	for (i = 0; i < 3; i++)	OLED_ShowCN(i * 16, 4, 7 + i);
-	sprintf(dispBuff, "%d.%d 'C", DHT11_Data.temp_int, DHT11_Data.temp_deci);
+	sprintf(dispBuff, "%bd.%bd 'C", DHT11_Data.temp_int, DHT11_Data.temp_deci);
 	OLED_ShowStr(45, 4, (uint8_t *)dispBuff, 2);
-	/* æ˜¾ç¤ºæ¹¿åº¦ */
+	/* ÏÔÊ¾Êª¶È */
 	for (i = 0; i < 3; i++)	OLED_ShowCN(i * 16, 6, 10 + i);
-	sprintf(dispBuff, "%d.%d% %RH", DHT11_Data.humi_int, DHT11_Data.humi_deci);
+	sprintf(dispBuff, "%bd.%bd% %RH", DHT11_Data.humi_int, DHT11_Data.humi_deci);
 	OLED_ShowStr(45, 6, (uint8_t *)dispBuff, 2);
 }
-/***********************************END OF FILE*********************************/

@@ -1,0 +1,127 @@
+C51 COMPILER V9.60.0.0   USART                                                             02/12/2021 02:25:39 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE USART
+OBJECT MODULE PLACED IN .\Objects\usart.obj
+COMPILER INVOKED BY: E:\Keil_v5\C51\BIN\C51.EXE ..\User\Usart\usart.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(..\User;..\m
+                    -cu_sdk) DEBUG OBJECTEXTEND PRINT(.\Listings\usart.lst) TABS(2) OBJECT(.\Objects\usart.obj)
+
+line level    source
+
+   1          #include "./Usart/usart.h"
+   2          
+   3          bit busy_debug;
+   4          uint8_t wptr1;
+   5          uint8_t rptr1;
+   6          uint8_t buffer1[16];
+   7          
+   8          bit busy;
+   9          uint8_t wptr;
+  10          uint8_t rptr;
+  11          uint8_t buffer[16];
+  12          
+  13          void UartDebugIsr() interrupt 4
+  14          {
+  15   1          if (TI)
+  16   1          {
+  17   2              TI = 0;
+  18   2              busy_debug = 0;
+  19   2          }
+  20   1          if (RI)
+  21   1          {
+  22   2              RI = 0;
+  23   2              buffer1[wptr1++] = SBUF;
+  24   2              wptr1 &= 0x0f;
+  25   2          }
+  26   1      }
+  27          
+  28          void Uart3Isr() interrupt 17
+  29          {
+  30   1          if (S3CON & 0x02)
+  31   1          {
+  32   2              S3CON &= ~0x02;
+  33   2              busy = 0;
+  34   2          }
+  35   1          if (S3CON & 0x01)
+  36   1          {
+  37   2              S3CON &= ~0x01;
+  38   2      //        buffer[wptr++] = S3BUF;
+  39   2      //        wptr &= 0x0f;
+  40   2            uart_receive_input(S3BUF);
+  41   2          }
+  42   1      }
+  43          
+  44          void UartDebugInit()
+  45          {
+  46   1          SCON = 0x50;
+  47   1          TMOD |= 0x00;
+  48   1          TL1 = BRT;
+  49   1          TH1 = BRT >> 8;
+  50   1          TR1 = 1;
+  51   1          AUXR = 0x40;
+  52   1          wptr1 = 0x00;
+  53   1          rptr1 = 0x00;
+  54   1          busy_debug = 0;
+C51 COMPILER V9.60.0.0   USART                                                             02/12/2021 02:25:39 PAGE 2   
+
+  55   1          ES = 1;
+  56   1          EA = 1;
+  57   1      }
+  58          
+  59          void Uart3Init()
+  60          {
+  61   1          S3CON = 0x10;
+  62   1          T2L = BRT;
+  63   1          T2H = BRT >> 8;
+  64   1          AUXR |= 0x14;
+  65   1          wptr = 0x00;
+  66   1          rptr = 0x00;
+  67   1          busy = 0;
+  68   1          IE2|=ES3;
+  69   1          EA = 1;
+  70   1      }
+  71          
+  72          void UartDebugSend(uint8_t dat)
+  73          {
+  74   1          while (busy_debug);
+  75   1          busy_debug = 1;
+  76   1          SBUF = dat;
+  77   1      }
+  78          
+  79          void UartDebugSendStr(uint8_t *p)
+  80          {
+  81   1          while (*p)
+  82   1          {
+  83   2              UartDebugSend(*p++);
+  84   2          }
+  85   1      }
+  86          
+  87          void Uart3Send(uint8_t dat)
+  88          {
+  89   1          while (busy);
+  90   1          busy = 1;
+  91   1          S3BUF = dat;
+  92   1      }
+  93          
+  94          void Uart3SendStr(uint8_t *p)
+  95          {
+  96   1          while (*p)
+  97   1          {
+  98   2              Uart3Send(*p++);
+  99   2          }
+ 100   1      }
+ 101          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    319    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     36       6
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      2    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

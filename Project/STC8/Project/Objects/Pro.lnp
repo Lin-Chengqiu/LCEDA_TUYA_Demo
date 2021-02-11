@@ -1,0 +1,13 @@
+".\Objects\main.obj",
+".\Objects\LED.obj",
+".\Objects\Timer.obj",
+".\Objects\OLED_I2C.obj",
+".\Objects\bsp_dht11.obj",
+".\Objects\usart.obj",
+".\Objects\delay.obj",
+".\Objects\bsp_key.obj",
+".\Objects\mcu_api.obj",
+".\Objects\protocol.obj",
+".\Objects\system.obj" 
+TO ".\Objects\Pro" 
+PRINT(".\Listings\Pro.m51") RAMSIZE(256) 

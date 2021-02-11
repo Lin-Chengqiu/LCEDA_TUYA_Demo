@@ -1,0 +1,72 @@
+C51 COMPILER V9.60.0.0   BSP_KEY                                                           02/12/2021 02:25:39 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE BSP_KEY
+OBJECT MODULE PLACED IN .\Objects\bsp_key.obj
+COMPILER INVOKED BY: E:\Keil_v5\C51\BIN\C51.EXE ..\User\Key\bsp_key.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(..\User;..\m
+                    -cu_sdk) DEBUG OBJECTEXTEND PRINT(.\Listings\bsp_key.lst) TABS(2) OBJECT(.\Objects\bsp_key.obj)
+
+line level    source
+
+   1          #include "./key/bsp_key.h"  
+   2          
+   3          
+   4          void Key_init(void)
+   5          {
+   6   1        P3M1=(P3M1&0x3F)|0xC0;  //设置IO口模式
+   7   1        P3M0=(P3M0&0x3F)|0xC0;  //设置IO口模式
+   8   1        /*
+   9   1        P3.0维持不变
+  10   1        P3.1维持不变
+  11   1        P3.2维持不变
+  12   1        P3.3维持不变
+  13   1        P3.4维持不变
+  14   1        P3.5维持不变
+  15   1        P3.6开漏
+  16   1        P3.7开漏
+  17   1        */
+  18   1      }
+  19          
+  20          void KeyScan(void)
+  21          {
+  22   1        static uint8_t OLED_Light = 1;
+  23   1        static uint8_t LedEnable = 0;
+  24   1        if (KEY1 == KEY_ON)
+  25   1        {
+  26   2          LedEnable = !LedEnable;
+  27   2          if(LedEnable)
+  28   2          {
+  29   3            IE2 |= ET4;
+  30   3          }
+  31   2          else
+  32   2          {
+  33   3            IE2 &= ~ET4;
+  34   3            LED_R_OFF;LED_G_OFF;LED_B_OFF;
+  35   3          }
+  36   2        }while(KEY1 == KEY_ON);
+  37   1        if (KEY2 == KEY_ON)
+  38   1        {
+  39   2          OLED_Light = !OLED_Light;
+  40   2          if(OLED_Light)
+  41   2            OLED_ON();
+  42   2          else
+  43   2            OLED_OFF();
+  44   2        }while(KEY2 == KEY_ON);
+  45   1      }
+  46          /*********************************************END OF FILE**********************/
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     90    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =      2    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+C51 COMPILER V9.60.0.0   BSP_KEY                                                           02/12/2021 02:25:39 PAGE 2   
+
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
