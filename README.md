@@ -6,7 +6,11 @@ For more information, please check Tuya Developer Website.
 
 立创EDA：https://oshwhub.com/Just_For_Fun/wu-lian-wang-wen-shi-du-ji
 
-STM32:
+普普通通，没有什么特点
+
+###### STM32:
+
+![image-20210212223853653](https://i.loli.net/2021/02/13/4lRVdWpkLs6MouB.png)
 
 ```C
 int main()
@@ -28,7 +32,9 @@ int main()
 }
 ```
 
-STC8:
+###### STC8:
+
+直接移植STM32的部分代码
 
 ```C
 int main()
