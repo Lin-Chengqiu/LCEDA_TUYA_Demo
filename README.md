@@ -4,7 +4,7 @@ This project is developed using Tuya SDK, which enables you to quickly develop b
 apps connecting and controlling smart scenarios of many devices.
 For more information, please check Tuya Developer Website.
 
-立创EDA：https://oshwhub.com/Just_For_Fun/wu-lian-wang-wen-shi-du-
+立创EDA：https://oshwhub.com/Just_For_Fun/wu-lian-wang-wen-shi-du-ji
 
 普普通通，没有什么特点
 
