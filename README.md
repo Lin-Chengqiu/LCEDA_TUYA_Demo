@@ -10,7 +10,7 @@ For more information, please check Tuya Developer Website.
 
 ##### 调试流程：
 
-1、获取DHT11的温湿度温湿度数据，并通过串口打印；
+1、通过DHT11的获取温湿度数据，并通过串口打印；
 
 2、通过mcu_get_wifi_work_state()获取WBR3工作状态，并通过串口打印WIFI工作状态
 
@@ -26,7 +26,7 @@ For more information, please check Tuya Developer Website.
 
 ![image-20210212223853653](https://i.loli.net/2021/02/12/t5yrskc2614XuBe.png)
 
-初次连接设备需要按下核心板上的按键KEY1进行配网，下图为两种工作模式，分别亮起LED1和LED2，同时OLED显示WBR3工作状态
+初次连接设备需要进行配网
 
 ![IMG_20210213_211150](https://i.loli.net/2021/02/14/vmPTyQVSiROxXqc.jpg)![IMG_20210213_211128](https://i.loli.net/2021/02/14/UpMz7cFXyOlbhES.jpg)
 
